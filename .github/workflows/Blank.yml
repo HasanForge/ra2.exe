@@ -29,9 +29,9 @@ jobs:
       - name: Build 32-bit Windows 7 native addon
         shell: pwsh
         run: |
-          cargo build --locked --release -p ra-napi `
-            -Z build-std=std,panic_abort `
-            --target i686-win7-windows-msvc
+         cargo build --release -p ra-napi `
+         -Z build-std=std,panic_abort `
+         --target i686-win7-windows-msvc
 
       - name: Prepare artifacts
         shell: pwsh

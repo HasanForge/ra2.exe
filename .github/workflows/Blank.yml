@@ -1,0 +1,58 @@
+
+name: Build RA2 Windows 7 x86
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Rust Nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+
+      - name: Show toolchain
+        shell: pwsh
+        run: |
+          rustc -V
+          cargo -V
+
+      - name: Build 32-bit Windows 7 native addon
+        shell: pwsh
+        run: |
+          cargo build --locked --release -p ra-napi `
+            -Z build-std=std,panic_abort `
+            --target i686-win7-windows-msvc
+
+      - name: Prepare artifacts
+        shell: pwsh
+        run: |
+          $dll = "target/i686-win7-windows-msvc/release/ra_napi.dll"
+
+          if (!(Test-Path $dll)) {
+            Write-Error "Build output not found: $dll"
+            Get-ChildItem target/i686-win7-windows-msvc/release
+            exit 1
+          }
+
+          New-Item -ItemType Directory -Force -Path dist/x86
+
+          Copy-Item $dll dist/x86/ra_napi.dll
+          Copy-Item $dll dist/x86/ra_napi.node
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: RA2-Windows7-x86
+          path: dist/x86/*
+          if-no-files-found: error
+          
